@@ -6,7 +6,7 @@ import MaterialDesignIcons from "@react-native-vector-icons/material-design-icon
 
 import AddEntryForm from "../components/AddEntryForm";
 import HistoryList from "../components/HistoryList";
-import { addEntry, getAllEntries } from "../storage/entries";
+import { loadEntries, saveEntry } from "../services/milkService";
 import type { Entry } from "../types/entry";
 
 export default function HomeScreen() {
@@ -14,24 +14,24 @@ export default function HomeScreen() {
   const theme = useTheme();
   const [entries, setEntries] = useState<Entry[]>([]);
 
-  const loadEntries = useCallback(async () => {
-    const stored = await getAllEntries();
+  const refreshEntries = useCallback(async () => {
+    const stored = await loadEntries();
     setEntries(stored);
   }, []);
 
   useEffect(() => {
-    loadEntries();
-  }, [loadEntries]);
+    refreshEntries();
+  }, [refreshEntries]);
 
   useFocusEffect(
     useCallback(() => {
-      loadEntries();
-    }, [loadEntries])
+      refreshEntries();
+    }, [refreshEntries])
   );
 
   const handleSave = async (entry: { date: string; quantity: number }) => {
-    await addEntry(entry.date, entry.quantity);
-    await loadEntries();
+    await saveEntry(entry.date, entry.quantity);
+    await refreshEntries();
   };
 
   return (

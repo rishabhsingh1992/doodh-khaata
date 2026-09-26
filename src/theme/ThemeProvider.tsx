@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
 
-import { getTheme, setTheme as persistTheme, type Theme } from "../storage/settings";
+import { loadTheme, saveTheme } from "../services/milkService";
+import type { Theme } from "../storage/settings";
 
 type ThemeContextValue = {
   theme: Theme;
@@ -14,12 +15,12 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
-    getTheme().then(setThemeState);
+    loadTheme().then(setThemeState);
   }, []);
 
   const setTheme = (next: Theme) => {
     setThemeState(next);
-    persistTheme(next);
+    saveTheme(next);
   };
 
   return (

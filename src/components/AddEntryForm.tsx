@@ -6,7 +6,8 @@ import { format } from "date-fns";
 
 import NumberPad from "./NumberPad";
 import QuickAdjustButtons from "./QuickAdjustButtons";
-import { getDefaultQuantity } from "../storage/settings";
+import { loadDefaultQuantity } from "../services/milkService";
+import { parseNumericInput } from "../utils/validation";
 
 type AddEntryFormProps = {
   onSave: (entry: { date: string; quantity: number }) => void;
@@ -19,7 +20,7 @@ export default function AddEntryForm({ onSave }: AddEntryFormProps) {
   const [defaultQuantity, setDefaultQuantity] = useState("1");
 
   useEffect(() => {
-    getDefaultQuantity().then((value) => {
+    loadDefaultQuantity().then((value) => {
       const stringValue = String(value);
       setDefaultQuantity(stringValue);
       setQuantity(stringValue);
@@ -27,13 +28,13 @@ export default function AddEntryForm({ onSave }: AddEntryFormProps) {
   }, []);
 
   const handleAdjust = (delta: number) => {
-    const current = Number.parseFloat(quantity) || 0;
+    const current = parseNumericInput(quantity) ?? 0;
     setQuantity(String(current + delta));
   };
 
   const handleSave = () => {
-    const parsed = Number.parseFloat(quantity);
-    if (Number.isNaN(parsed)) {
+    const parsed = parseNumericInput(quantity);
+    if (parsed === null) {
       return;
     }
     onSave({ date: format(date, "yyyy-MM-dd"), quantity: parsed });
