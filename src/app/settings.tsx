@@ -6,12 +6,12 @@ import { List, Switch, Text, TextInput, useTheme } from "react-native-paper";
 
 import { useAppTheme } from "../theme/ThemeProvider";
 import {
-  getDefaultQuantity,
-  getReminderTime,
-  setDefaultQuantity as persistDefaultQuantity,
-  setReminderTime as persistReminderTime,
-} from "../storage/settings";
-import { scheduleDailyReminder } from "../notifications/reminders";
+  loadDefaultQuantity,
+  loadReminderTime,
+  saveDefaultQuantity,
+  updateReminderSchedule,
+} from "../services/milkService";
+import { parseNumericInput } from "../utils/validation";
 
 function timeStringToDate(time: string): Date {
   const [hours, minutes] = time.split(":").map(Number);
@@ -32,23 +32,25 @@ export default function SettingsScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
-    getDefaultQuantity().then((value) => setDefaultQuantityState(String(value)));
-    getReminderTime().then(setReminderTimeState);
+    loadDefaultQuantity().then((value) => setDefaultQuantityState(String(value)));
+    loadReminderTime().then(setReminderTimeState);
   }, []);
 
-  const handleDefaultQuantityChange = (value: string) => {
+  const handleDefaultQuantityChange = async (value: string) => {
     setDefaultQuantityState(value);
-    const parsed = Number.parseFloat(value);
-    if (!Number.isNaN(parsed)) {
-      persistDefaultQuantity(parsed);
+    const parsed = parseNumericInput(value);
+    if (parsed === null) {
+      return;
     }
+
+    const normalized = await saveDefaultQuantity(parsed);
+    setDefaultQuantityState(String(normalized));
   };
 
-  const handleReminderTimeChange = (date: Date) => {
+  const handleReminderTimeChange = async (date: Date) => {
     const value = dateToTimeString(date);
-    setReminderTimeState(value);
-    persistReminderTime(value);
-    scheduleDailyReminder(value);
+    const normalized = await updateReminderSchedule(value);
+    setReminderTimeState(normalized);
   };
 
   return (
